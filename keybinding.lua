@@ -6,9 +6,9 @@ return {
 
     keys = {
         -- work space
-        { key = 'w', mods = 'SUPER', action = act.ShowLauncherArgs({ flags = 'WORKSPACES', title = 'Select workspace' }) },
+        { key = 'w', mods = 'LEADER', action = act.ShowLauncherArgs({ flags = 'WORKSPACES', title = 'Select workspace' }) },
         -- rename work space
-        { key = '2', mods = 'SUPER', 
+        { key = '2', mods = 'LEADER', 
             action = act.PromptInputLine({ description = '(wezterm) Set workspace title:', 
             action = wezterm.action_callback(function(win, pane, line)
                 if line then
@@ -19,7 +19,7 @@ return {
         },
         -- work space menu
         {
-            key = 'l', mods = 'SUPER',
+            key = 'l', mods = 'LEADER',
             action = wezterm.action_callback (function (win, pane)
             -- create a list of workspace names
             local workspaces = {}
