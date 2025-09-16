@@ -6,7 +6,28 @@ local config = {}
 
 config.automatically_reload_config = true
 
-config.default_prog = { 'powershell.exe', '-Nologo' }
+config.initial_fullscreen = true
+
+local function is_wsl()
+  local f = io.open("/proc/version")
+  if f then
+    local v = f:read("*a")
+    f:close()
+    return v:match("Microsoft") ~= nil
+  end
+  return false
+end
+
+
+if wezterm.target_triple:find("apple") then
+  config.default_prog = { "/bin/zsh", "-l" }
+elseif is_wsl() then
+  config.default_prog = { "/bin/bash", "-l" }
+elseif wezterm.target_triple:find("linux") then
+  config.default_prog = { "/bin/bash", "-l" }
+elseif wezterm.target_triple:find("windows") then
+  config.default_prog = { 'powershell.exe', '-Nologo' }
+end
 
 config.launch_menu = require('launchmenu')
 
