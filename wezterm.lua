@@ -2,11 +2,15 @@ local wezterm = require 'wezterm'
 require 'format'
 require 'status'
 
+local mux = wezterm.mux
+
+wezterm.on('gui-startup', function(window)
+  local tab, pane, window = mux.spawn_window(cmd or {})
+  local gui_window = window:gui_window();
+  gui_window:perform_action(wezterm.action.ToggleFullScreen, pane)
+end)
+
 local config = {}
-
-config.automatically_reload_config = true
-
-config.initial_fullscreen = true
 
 local function is_wsl()
   local f = io.open("/proc/version")
@@ -28,6 +32,8 @@ elseif wezterm.target_triple:find("linux") then
 elseif wezterm.target_triple:find("windows") then
   config.default_prog = { 'powershell.exe', '-Nologo' }
 end
+
+
 
 config.launch_menu = require('launchmenu')
 
@@ -62,5 +68,7 @@ config.front_end = 'OpenGL'
 config.status_update_interval = 1000
 
 config.hide_mouse_cursor_when_typing = true
+
+config.native_macos_fullscreen_mode = true
 
 return config
