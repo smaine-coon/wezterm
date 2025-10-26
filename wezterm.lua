@@ -18,6 +18,23 @@ config.use_ime = true
 wezterm.on("gui-startup", function(cmd)
     local tab, pane, window = mux.spawn_window(cmd or {})
     window:gui_window():maximize()
+
+    local current_appearance = utils.get_system_appearance()
+
+    local function poll_appearance()
+      local new_appearance = utils.get_system_appearance()
+      if new_appearance ~= current_appearance then
+        current_appearance = new_appearance
+        local scheme = utils.set_appearance(new_appearance)
+        window:set_config_overrides({ color_scheme = scheme })
+        wezterm.log_info("Theme switched to" .. scheme)
+      end
+
+      wezterm.time.call_after(10.0, poll_appearance)
+    end
+
+    wezterm.time.call_after(10.0, poll_appearance)
+
 end)
 
 config.window_background_opacity = 0.85
@@ -56,14 +73,19 @@ config.colors = {
 local tab_left_decoration = wezterm.nerdfonts.pl_right_hard_divider
 local tab_right_decoration = wezterm.nerdfonts.pl_left_hard_divider
 
-local tab_bg_color = { "#282828", "#665c54" }
-local tab_fg_color = { "#fbf1c7", "#bdae93" }
+local tab_bg_color = { "#282828", "#665c54", "#fbf1c7", "#bdae93" }
+local tab_fg_color = { "#fbf1c7", "#bdae93", "#282828", "#665c54" }
 
 local tab_decoration_bg_color = "none"
 local tab_decoration_fg_color = tab_bg_color
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
   local index = tab.is_active and 1 or 2
+
+  local appearance = utils.get_system_appearance()
+  if appearance == "Light" then
+    index = index + 2
+  end
 
   return {
     { Background = { Color = tab_decoration_bg_color } },
@@ -79,7 +101,7 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
 end)
 
 -- colorscheme
-config.color_scheme = "Gruvbox Dark (Gogh)"
+config.color_scheme = utils.set_appearance(utils.get_system_appearance())
 
 -- terminal
 if utils.detect_os() == "windows" then
@@ -114,14 +136,19 @@ local icon_clock = wezterm.nerdfonts.fa_clock
 local status_left_decoration = wezterm.nerdfonts.pl_right_hard_divider
 local status_right_decoration = wezterm.nerdfonts.pl_left_hard_divider
 
-local status_bg_color = { "#282828", "#665c54" }
-local status_fg_color = { "#fbf1c7", "#bdae93" }
+local status_bg_color = { "#282828", "#665c54", "#fbf1c7", "#bdae93" }
+local status_fg_color = { "#fbf1c7", "#bdae93", "#282828", "#665c54" }
 
 local status_decoration_bg_color = "none"
 local status_decoration_fg_color = status_bg_color
 
 local function add_element(elems, info_table, color_index)
   local index = color_index or 1
+
+  local appearance = utils.get_system_appearance()
+  if appearance == "Light" then
+    index = index + 2
+  end
 
   local icon = info_table[1]
   local info = info_table[2]
@@ -137,6 +164,30 @@ local function add_element(elems, info_table, color_index)
   else
     table.insert(elems, { Text = " " .. icon .. info .. " " })
   end
+end
+
+local function add_left_decoration(elems)
+  local index = 1
+  local appearance = utils.get_system_appearance()
+  if appearance == "Light" then
+    index = index + 2
+  end
+
+  table.insert(elems, { Background = { Color = status_decoration_bg_color } })
+  table.insert(elems, { Foreground = { Color = status_decoration_fg_color[index] } })
+  table.insert(elems, { Text = status_left_decoration })
+end
+
+local function add_right_decoration(elems)
+  local index = 1
+  local appearance = utils.get_system_appearance()
+  if appearance == "Light" then
+    index = index + 2
+  end
+
+  table.insert(elems, { Background = { Color = status_decoration_bg_color } })
+  table.insert(elems, { Foreground = { Color = status_decoration_fg_color[index] } })
+  table.insert(elems, { Text = status_right_decoration })
 end
 
 local function get_battery_level(elems, window)
@@ -161,7 +212,7 @@ local function get_keyboard(elems, window)
   local key_table_name = window:active_key_table()
 
   if key_table_name then
-    add_element(elems, { "", key_table_name})
+    add_element(elems, { "", key_table_name}, nil)
   else
     add_element(elems, { "", "?" }, 1)
   end
@@ -181,19 +232,13 @@ end
 
 local function update_status(window, pane)
   local elems = {}
-
-  table.insert(elems, { Background = { Color = status_decoration_bg_color } })
-  table.insert(elems, { Foreground = { Color = status_decoration_fg_color[1] } })
-  table.insert(elems, { Text = status_left_decoration })
-
+  
+  add_left_decoration(elems)
   get_keyboard(elems, window)
   get_battery_level(elems, window)
   get_date(elems)
   get_time(elems)
-
-  table.insert(elems, { Background = { Color = status_decoration_bg_color } })
-  table.insert(elems, { Foreground = { Color = status_decoration_fg_color[1] } })
-  table.insert(elems, { Text = status_right_decoration })
+  add_right_decoration(elems)
 
   window:set_right_status(wezterm.format(elems))
 end
