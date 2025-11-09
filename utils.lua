@@ -46,7 +46,7 @@ M.get_system_appearance = function()
       fi
       ]],
     })
-    local out = (stdout or ""):lower()
+    local out = ((stdout or ""):gsub("\n","")):lower()
     if out:find("dark") then
       return "Dark"
     else
@@ -57,11 +57,77 @@ M.get_system_appearance = function()
   end
 end
 
-M.set_appearance = function(appearance)
+M.load_theme = function()
+  local theme_file =  wezterm.config_dir .. "/wez_theme.txt"
+
+  local default_dark_scheme = 'Gruvbox Dark (Gogh)'
+  local default_light_scheme = 'Gruvbox (Gogh)'
+
+  local N = {}
+
+  N.dark_scheme = default_dark_scheme
+  N.light_scheme = default_light_scheme
+
+  local f = io.open(theme_file, "r")
+
+  if f then
+    local dark_scheme = f:read("*l")
+    local light_scheme = f:read("*l")
+    
+    f:close()
+
+    if dark_scheme and #dark_scheme > 0 then
+      N.dark_scheme = dark_scheme
+    end
+    if light_scheme and #light_scheme > 0 then
+      N.light_scheme = light_scheme
+    end
+  end
+
+  return N
+end
+
+M.save_theme = function(appearance, theme)
+  local theme_file =  wezterm.config_dir .. "/wez_theme.txt"
+
+  local f = io.open(theme_file, "r")
+
+  local lines = {"", ""}
+
+  if f then
+    for i = 1, 2 do
+      lines[i] = f:read("*l") or ""
+    end
+    
+    f:close()
+  end
+
   if appearance == "Light" then
-    return 'Gruvbox (Gogh)'
+    lines[2] = theme
   else
-    return 'Gruvbox Dark (Gogh)'
+    lines[1] = theme
+  end
+
+  f = io.open(theme_file, "w")
+
+  if f then
+    for _, line in ipairs(lines) do
+        f:write(line .. "\n")
+    end
+
+    f:close()
+  else
+    wezterm.log_error("Error: Failed to open theme file for writing: " .. theme_file)
+  end
+end
+
+M.set_appearance = function(appearance)
+  local N = M.load_theme()
+
+  if appearance == "Light" then
+    return N.light_scheme
+  else
+    return N.dark_scheme
   end
 end
 

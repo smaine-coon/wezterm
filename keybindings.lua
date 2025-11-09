@@ -1,10 +1,26 @@
-local wezterm = require "wezterm"
+local wezterm = require("wezterm")
+
+local utils = require("utils")
+
 local act = wezterm.action
 
 return {
   leader = { key = "\\", mods="CTRL", timeout_milliseconds = 2000},
 
   keys = {
+    -- change color scheme
+    {
+      key = "p",
+      mods = "CTRL",
+      action = act.PromptInputLine({
+        description = "Input color scheme",
+        action = wezterm.action_callback(function(window, pane, line)
+          if line and #line > 0 then
+            utils.save_theme(utils.get_system_appearance(), line)
+          end
+        end)
+      }),
+    },
     -- tab
     { key = "Tab", mods = "CTRL", action = act.ActivateTabRelative(1) },
     { key = "Tab", mods = "SHIFT|CTRL", action = act.ActivateTabRelative(-1) },
