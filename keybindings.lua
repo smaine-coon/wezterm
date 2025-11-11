@@ -4,14 +4,17 @@ local utils = require("utils")
 
 local act = wezterm.action
 
-local themes = {
-  "Gruvbox Dark (Gogh)",
-  "Gruvbox (Gogh)",
-  "tokyonight_moon",
-  "tokyonight_day"
-}
-
 local function choose_both_themes(window, pane)
+  local dark_themes = {
+    "Gruvbox Dark (Gogh)",
+    "tokyonight_moon",
+  }
+
+  local light_themes = {
+    "Gruvbox (Gogh)",
+    "tokyonight_day"
+  }
+
   window:perform_action(
     act.InputSelector({
       title = "Dark Theme",
@@ -21,7 +24,7 @@ local function choose_both_themes(window, pane)
         local list = {
           { label = string.format("Current: %s", current), id = "__current__" },
         }
-        for _, name in ipairs(themes) do
+        for _, name in ipairs(dark_themes) do
           table.insert(list, { label = name, id = name })
         end
         return list
@@ -41,7 +44,7 @@ local function choose_both_themes(window, pane)
               local list = {
                 { label = string.format("Current: %s", current), id = "__current__" },
               }
-              for _, name in ipairs(themes) do
+              for _, name in ipairs(light_themes) do
                 table.insert(list, { label = name, id = name })
               end
               return list
