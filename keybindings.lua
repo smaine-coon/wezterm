@@ -4,6 +4,63 @@ local utils = require("utils")
 
 local act = wezterm.action
 
+local themes = {
+  "Gruvbox Dark (Gogh)",
+  "Gruvbox (Gogh)",
+  "tokyonight_moon",
+  "tokyonight_day"
+}
+
+local function choose_both_themes(window, pane)
+  window:perform_action(
+    act.InputSelector({
+      title = "Dark Theme",
+      description = "Select a Dark theme",
+      choices = (function()
+        local current = utils.set_appearance("Dark")
+        local list = {
+          { label = string.format("Current: %s", current), id = "__current__" },
+        }
+        for _, name in ipairs(themes) do
+          table.insert(list, { label = name, id = name })
+        end
+        return list
+      end)(),
+      action = wezterm.action_callback(function(win, _, dark_id)
+        if dark_id and dark_id ~= "__current__" then
+          utils.save_theme("Dark", dark_id)
+          wezterm.log_info("Saved Dark theme: " .. dark_id)
+        end
+
+        win:perform_action(
+          act.InputSelector({
+            title = "Light Theme",
+            description = "Select a Light theme",
+            choices = (function()
+              local current = utils.set_appearance("Light")
+              local list = {
+                { label = string.format("Current: %s", current), id = "__current__" },
+              }
+              for _, name in ipairs(themes) do
+                table.insert(list, { label = name, id = name })
+              end
+              return list
+            end)(),
+            action = wezterm.action_callback(function(_, _, light_id)
+              if light_id and light_id ~= "__current__" then
+                utils.save_theme("Light", light_id)
+                wezterm.log_info("Saved Light theme: " .. light_id)
+              end
+            end),
+          }),
+          pane
+        )
+      end),
+    }),
+    pane
+  )
+end
+
 return {
   leader = { key = "\\", mods="CTRL", timeout_milliseconds = 2000},
 
@@ -12,14 +69,9 @@ return {
     {
       key = "p",
       mods = "CTRL",
-      action = act.PromptInputLine({
-        description = "Input color scheme",
-        action = wezterm.action_callback(function(window, pane, line)
-          if line and #line > 0 then
-            utils.save_theme(utils.get_system_appearance(), line)
-          end
-        end)
-      }),
+      action = wezterm.action_callback(function(window, pane)
+        choose_both_themes(window, pane)
+      end),
     },
     -- tab
     { key = "Tab", mods = "CTRL", action = act.ActivateTabRelative(1) },
