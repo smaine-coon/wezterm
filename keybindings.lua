@@ -48,10 +48,6 @@ local function choose_theme(appearance, window, pane)
   )
 end
 
-local function choose_both_themes(window, pane)
-  choose_theme(utils.get_system_appearance(), window, pane)
-end
-
 return {
   leader = { key = "\\", mods="CTRL", timeout_milliseconds = 2000},
 
@@ -61,7 +57,7 @@ return {
       key = "p",
       mods = "CTRL",
       action = wezterm.action_callback(function(window, pane)
-        choose_both_themes(window, pane)
+        choose_theme(utils.get_system_appearance(), window, pane)
       end),
     },
     -- tab
