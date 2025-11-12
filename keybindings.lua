@@ -4,7 +4,7 @@ local utils = require("utils")
 
 local act = wezterm.action
 
-local function choose_both_themes(window, pane)
+local function choose_theme(appearance, window, pane)
   local dark_themes = {
     "Gruvbox Dark (Gogh)",
     "tokyonight_moon",
@@ -15,53 +15,41 @@ local function choose_both_themes(window, pane)
     "tokyonight_day"
   }
 
+  local ls = nil
+
+  if appearance == "Dark" then
+    ls = dark_themes
+  else
+    ls = light_themes
+  end
+
   window:perform_action(
     act.InputSelector({
-      title = "Dark Theme",
-      description = "Select a Dark theme",
+      title = appearance .. "Theme",
+      description = "Select a " .. appearance .. " theme",
       choices = (function()
-        local current = utils.set_appearance("Dark")
+        local current = utils.set_appearance(appearance)
         local list = {
           { label = string.format("Current: %s", current), id = "__current__" },
         }
-        for _, name in ipairs(dark_themes) do
+        for _, name in ipairs(ls) do
           table.insert(list, { label = name, id = name })
         end
         return list
       end)(),
-      action = wezterm.action_callback(function(win, _, dark_id)
-        if dark_id and dark_id ~= "__current__" then
-          utils.save_theme("Dark", dark_id)
-          wezterm.log_info("Saved Dark theme: " .. dark_id)
+      action = wezterm.action_callback(function(win, _, id_)
+        if id_ and id_ ~= "__current__" then
+          utils.save_theme(appearance, id_)
+          wezterm.log_info("Saved " .. appearance .. " theme: " .. id_)
         end
-
-        win:perform_action(
-          act.InputSelector({
-            title = "Light Theme",
-            description = "Select a Light theme",
-            choices = (function()
-              local current = utils.set_appearance("Light")
-              local list = {
-                { label = string.format("Current: %s", current), id = "__current__" },
-              }
-              for _, name in ipairs(light_themes) do
-                table.insert(list, { label = name, id = name })
-              end
-              return list
-            end)(),
-            action = wezterm.action_callback(function(_, _, light_id)
-              if light_id and light_id ~= "__current__" then
-                utils.save_theme("Light", light_id)
-                wezterm.log_info("Saved Light theme: " .. light_id)
-              end
-            end),
-          }),
-          pane
-        )
       end),
     }),
     pane
   )
+end
+
+local function choose_both_themes(window, pane)
+  choose_theme(utils.get_system_appearance(), window, pane)
 end
 
 return {
